@@ -1,0 +1,52 @@
+# any time that we're making use of Docker, we have to have super user permissions
+# so this says "hey Travis, we need super user level permissions in order to execute this build"
+sudo: required
+
+# telling Travis that we need Docker CLI preinstalled
+# by adding this Travis CI is going to install a copy of Docker into our little running container
+services:
+  - docker
+
+# a series of different commands that get executed before our test are ran
+# some series of set up that needs to ocurr before we start to either deploy our project
+# or before we start to run our tests
+# we want to build our docker image before the test run
+before_install:
+  - docker build -t iscanderoff/docker-react -f Dockerfile.dev .
+# as a result of docker build we get back the id of the created image
+# so far we've been copy pasting that id around
+# now we don't get the ability to easily copy paste those ids around
+# instead of copy pasting we'll instead just put a tag or a label on the created image
+# so we can refer to the created image by a name rather than a randomly generated id
+# that is why we put -t
+# so in the future we can refer to the created image as iscanderoff/docker-react
+# it's not necessary to put this long iscanderoff/docker-react tag
+# we can write anything we want
+# the tag that is being applied here is only gonna be used inside of this Travis process
+# it's not gonna be used anywhere else
+# but it's good to use tag naming convention <docker username>/<repository name>
+
+# The script section is supposed to contain all the different commands that need
+# to be executed to actually run our test suites
+# these are gonna be a series of commands just like before_install was
+# that are gonna run when our test need to actually be executed
+# Travis CI is gonna be watching the output of each of these commands
+# and from each command if it ever gets a return status code other than 0
+# Travis is going to assume that our build failed or that our test suite failed to run properly
+# and it's going to assume that our code is broken
+# In order to run our tests, we're gonna use the same Docker command, that we used earlier
+# to start up our container out of that image (iscanderoff/docker-react)
+# and run the test inside of it:
+# docker run iscacnderoff/docker-react npm run test
+# но есть проблема, что при запуске npm run test, сам тест ожидает от нас ввода input'а
+# нажатия клавиш и выбора каких-то опций, поэтому этот процесс не завершится сам по себе
+# а Travis будет стоять и ждать результатов команды
+# To make sure that the test suite automatically exits the instant that the first run is completed
+# we're gonna add on a little additional command -- --coverage
+# The only thing that Travis cares about is the status code that comes back from running this command
+script:
+  - docker run iscacnderoff/docker-react npm run test -- --coverage
+
+# So now any time that Travis sees that we have pushed a new commit up to Github,
+# it's going to clone all of our code and then use these series of instructions
+# to build our docker image, run some tests and then report on whether our test succeeded or failed

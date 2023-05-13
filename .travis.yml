@@ -50,4 +50,3 @@ script:
 # So now any time that Travis sees that we have pushed a new commit up to Github,
 # it's going to clone all of our code and then use these series of instructions
 # to build our docker image, run some tests and then report on whether our test succeeded or failed
-

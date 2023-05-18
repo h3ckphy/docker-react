@@ -50,3 +50,53 @@ script:
 # So now any time that Travis sees that we have pushed a new commit up to Github,
 # it's going to clone all of our code and then use these series of instructions
 # to build our docker image, run some tests and then report on whether our test succeeded or failed
+
+# inside this section we're gonna tell Travis CI exactly how to take our app
+# and deploy it off to AWS
+deploy:
+  # Travis CI comes preconfigured to deploy our app to a handful of different providers
+  # or hosting providers such as AWS, Digital Ocean or others
+  # So by this we're telling Travis CI that "hey we want you to use this set of instructions
+  # to attempt to automatically deploy our application"
+  # So just by specifying that right there, Travis CI is going to do a lot of stuff for us automatically
+  provider: elasticbeanstalk
+
+  # we're going to still provide a lot of other options to just provide some further customization
+  region: "us-east-1" # это берем из AWS
+  # name of the AWS app
+  app: "docker"
+  # environment name
+  env: "Docker-env"
+  # when Travis decides to deploy our code base it's going to take all of the files
+  # inside of our Github repository, it's gonna zip them all up into one single file
+  # and then it's going to copy all of them over to S3 bucket which is essentially
+  # a hard drive running on AWS
+  # once it copies all those files over, Travis CI is then going to poke at elasticbeanstalk
+  # and say "hey I just uploaded this new ZIP file, use that to redeploy our application"
+  # so we need to provide the name of the bucket that Travis CI is going to put our ZIP file into
+  # S3 bucket is already automatically generated for us when we initally created the Elastic Beanstalk instance
+  # All we have to do is get the name of it
+  # В поиске вбиваем сервис "S3" и выбираем S3 - Scalable Storage in the Cloud
+  # и выбираем там наш bucket (ищем по региону в названии)
+  bucket_name: "elastkcbeanstalk-us-east-1-306476627547"
+  # So this S3 bucket that's holding all these different files, it gets reused
+  # for all of the different elastic beanstalk environments that we create
+  # When we first create our Elastic Beanstalk instance, changes are it's not going to
+  # create a folder by default automatically
+  # That folder is only going to be created the first time that we do a deploy
+  # So by default the bucket_path that we supposed to use is going to be exactly equal to the app name
+  bucket_path: "docker"
+  # пушим на feature и создаем pull request на merge с master
+  # any time we merge code into master that means it is time to deploy our application
+  # if we just merge code or push code up to the feature branch, we don't want to deploy the app
+  # the feature branch is for active development and it might have new features that are not ready
+  # to be deployed
+  # So the last piece of configuration is
+  # only attempt to deploy the application when the master branch gets some new code
+  on:
+    branch: master # any time we push code to the master that's the time to deploy
+
+  # "hey, I have an access key for you, but you're going to get it from the local environment configuration"
+  access_key_id: "$AWS_ACCESS_KEY"
+  secret_access_key:
+  secure: "$AWS_SECRET_KEY"
